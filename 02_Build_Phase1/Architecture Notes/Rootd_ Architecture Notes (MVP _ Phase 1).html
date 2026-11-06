@@ -1,0 +1,243 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}</style><style>:root{color-scheme:light dark;--md-bg:#fff;--md-text:rgba(0,0,0,.8);--md-muted:rgba(0,0,0,.6);--md-fill:rgba(0,0,0,.04);--md-fill-strong:rgba(0,0,0,.06);--md-rule:rgba(0,0,0,.1);--md-rule-strong:rgba(0,0,0,.16);--md-link:hsl(210 100% 45%)}@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])){--md-bg:#0d0d0d;--md-text:rgba(255,255,255,.85);--md-muted:rgba(255,255,255,.6);--md-fill:rgba(255,255,255,.06);--md-fill-strong:rgba(255,255,255,.09);--md-rule:rgba(255,255,255,.14);--md-rule-strong:rgba(255,255,255,.22);--md-link:hsl(210 100% 72%)}}:root[data-theme="dark"]{color-scheme:dark;--md-bg:#0d0d0d;--md-text:rgba(255,255,255,.85);--md-muted:rgba(255,255,255,.6);--md-fill:rgba(255,255,255,.06);--md-fill-strong:rgba(255,255,255,.09);--md-rule:rgba(255,255,255,.14);--md-rule-strong:rgba(255,255,255,.22);--md-link:hsl(210 100% 72%)}:root[data-theme="light"]{color-scheme:light}@media print{:root,:root[data-theme="dark"]{color-scheme:light;--md-bg:#fff;--md-text:rgba(0,0,0,.8);--md-muted:rgba(0,0,0,.6);--md-fill:rgba(0,0,0,.04);--md-fill-strong:rgba(0,0,0,.06);--md-rule:rgba(0,0,0,.1);--md-rule-strong:rgba(0,0,0,.16);--md-link:hsl(210 100% 45%)}}body{background:var(--md-bg);color:var(--md-text);max-width:720px;margin:0 auto;padding:32px;display:flex;flex-direction:column;gap:10px;font:14px/1.55 -apple-system,BlinkMacSystemFont,'SF Pro','Segoe UI',sans-serif;overflow-wrap:break-word}body>:first-child{margin-top:0}h1,h2,h3,h4,h5,h6{margin:6px 0 0;line-height:1.25;font-weight:600;text-wrap:balance}h1{font-size:1.35em}h2{font-size:1.15em;color:var(--md-muted)}h3,h4,h5,h6{font-size:1em}p,ul,ol,blockquote,table,pre,hr{margin:0}strong{font-weight:600}a{color:var(--md-link);text-decoration:none}a:hover{text-decoration:underline}ul,ol{display:flex;flex-direction:column;gap:6px;padding-left:22px}ul{list-style:disc}ol{list-style:decimal}:is(li,td,th)>*+:is(p,ul,ol,blockquote){margin-top:6px}blockquote{display:flex;flex-direction:column;gap:10px;border-left:2px solid var(--md-rule);padding-left:10px;color:var(--md-muted)}:not(pre)>code{background:var(--md-fill);padding:1px 3px;border-radius:4px;font:.92em 'SF Mono',ui-monospace,Menlo,Consolas,monospace}a>code{background:none;color:inherit}pre{background:var(--md-fill);padding:10px 12px;border-radius:6px;overflow-x:auto;font:12px/1.5 'SF Mono',ui-monospace,Menlo,Consolas,monospace;margin-block:4px}pre code{background:none;padding:0;font:inherit}table{width:100%;border-collapse:separate;border-spacing:2px;font:inherit}th,td{padding:6px 8px;border-radius:3px;text-align:left;vertical-align:top}th{background:var(--md-fill-strong);font-weight:600}td{background:var(--md-fill)}:is(th,td) :not(pre)>code{background:transparent}hr{border:0;border-top:1px solid var(--md-rule-strong);margin-block:10px}img{max-width:100%;height:auto;border-radius:4px}</style>
+</head><body>
+<h1>Rootd: Architecture Notes (MVP / Phase 1)</h1>
+<p><strong>Status:</strong> v0.2, approved, 7 Oct 2026. <strong>Owner:</strong> Ace (IT lead). <strong>Scope:</strong> Phase 1 web app, <strong>Standalone (PR/Citizenship) first</strong>, then Full Pathway (NLV/DNV). Mobile comes later.</p>
+<p><strong>Working assumptions:</strong> development is <strong>local only</strong> (no hosting yet), and <strong>&quot;Rootd&quot; is a working name</strong>, not final.</p>
+<h2>1. Guiding principles</h2>
+<ol>
+<li><strong>The rules decide, the AI drafts.</strong> Eligibility results come only from the deterministic, versioned rules engine. AI only generates editable document drafts.</li>
+<li><strong>Rules are data a lawyer can read.</strong> Rules live in versioned files, separate from UI code, so legal review has one source of truth.</li>
+<li><strong>Minimise personal data.</strong> Passports, income and criminal records are high-risk. Collect, store and send to third parties as little as possible.</li>
+<li><strong>EU-first.</strong> All data processing is in EU regions, with DPAs signed with every processor.</li>
+<li><strong>One language, one codebase.</strong> TypeScript everywhere, so web and mobile share the rules and types.</li>
+</ol>
+<h2>2. Decisions</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Area</th>
+<th>Decision</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Frontend</td>
+<td><strong>Next.js (App Router) + TypeScript</strong></td>
+<td>Mobile later with <strong>React Native (Expo)</strong>, reusing shared packages</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Backend / DB</td>
+<td><strong>Supabase, EU region</strong> (Postgres, Auth, Storage)</td>
+<td>Row Level Security on every table</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Team language</td>
+<td><strong>TypeScript / JavaScript</strong></td>
+<td></td>
+</tr>
+<tr>
+<td>4</td>
+<td>AI generation</td>
+<td><strong>Provider-agnostic wrapper, server-side only</strong></td>
+<td>No AI keys or calls from the client</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Payments</td>
+<td><strong>Stripe + Stripe Tax</strong></td>
+<td>See mobile caveat in section 8</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Rules engine</td>
+<td><strong>Versioned JSON/YAML rules + TypeScript evaluator</strong> in a shared package</td>
+<td></td>
+</tr>
+<tr>
+<td>7</td>
+<td>Hosting</td>
+<td><strong>Local development for now.</strong> Planned later: Vercel, EU region, DPA signed</td>
+<td>Hosting deferred, nothing is deployed yet</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Repo</td>
+<td><strong>Monorepo: pnpm + Turborepo</strong></td>
+<td></td>
+</tr>
+<tr>
+<td>9</td>
+<td>Sensitive docs</td>
+<td><strong>Encrypted in Supabase Storage, auto-deleted after a set period</strong></td>
+<td>Design agreed, <strong>uploads deferred</strong> (see open points)</td>
+</tr>
+</tbody>
+</table>
+<h2>3. Repository layout</h2>
+<pre><code>rootd/
+  apps/
+    web/                 Next.js app (public site, checker, dashboard)
+    mobile/              Expo app (added after web MVP)
+  packages/
+    rules/               Rule files + evaluator (no UI, no network)
+      nlv-dnv/           Full Pathway rule set
+      pr-citizenship/    Standalone rule set (separate, no shared logic)
+    schemas/             Zod schemas / shared types (intake, results)
+    doc-templates/       Document templates (cover letter, declarations)
+    ai/                  Provider-agnostic AI wrapper + prompt files
+    config/              ESLint, TS, Tailwind presets
+  supabase/
+    migrations/          SQL migrations (source of truth for schema)
+  docs/                  These notes, spec, roadmap
+</code></pre>
+<h2>4. System overview</h2>
+<ul>
+<li><strong>Web (Next.js)</strong> renders the free eligibility checker, results, paywall, document editor and stage tracker. Server Actions / Route Handlers do all privileged work.</li>
+<li><strong>Rules package</strong> is called server-side for authoritative results and may also run client-side for instant UI feedback. The server result is the one that counts and is stored.</li>
+<li><strong>Supabase</strong> holds users, intake answers, eligibility results (with rule-set version), document drafts, stage state and purchases.</li>
+<li><strong>AI wrapper</strong> takes structured, minimised inputs plus a versioned template, and returns a draft the user can edit. Output is always labelled as a template, not legal advice.</li>
+<li><strong>Stripe</strong> handles checkout and tax. Webhooks update the entitlement table, and the app trusts only the webhook, never the client.</li>
+</ul>
+<h2>5. Rules engine</h2>
+<ul>
+<li>Each rule set is versioned (<code>nlv-dnv@1.0.0</code>). Every stored result records the version used.</li>
+<li>Rules are declarative (thresholds, conditions, consulate mapping) and the evaluator is small and pure.</li>
+<li>Full Pathway and Standalone are <strong>separate packages</strong> with no shared logic. Standalone reports <strong>present vs missing only</strong>, never valid vs invalid.</li>
+<li><strong>Golden test suite</strong> (Vitest): a table of input profiles with expected outcomes, reviewed and signed off by the attorney. Changing a rule requires updating and re-approving the cases.</li>
+<li>Changes to rule files go through PR review with a mandatory legal-review checklist item.</li>
+</ul>
+<h2>6. Data protection and retention</h2>
+<ul>
+<li><strong>Anonymous first:</strong> the free checker needs no signup. Answers stay in the browser session and only persist after the user creates an account.</li>
+<li><strong>Uploaded documents (deferred, not in current scope):</strong> when built, stored in a private Supabase Storage bucket, encrypted at rest, accessed only via short-lived signed URLs and RLS policies. <strong>Auto-delete after a set period.</strong> Proposed default: <strong>30 days after last activity</strong>, configurable, to be confirmed with the lawyer. Implemented with a scheduled job (pg_cron) that removes files and records.</li>
+<li><strong>Extra protection</strong> for the most sensitive items (e.g. criminal record certificates): application-level encryption before upload, with keys held outside the database. Decide before building the upload feature.</li>
+<li><strong>AI minimisation:</strong> send only the fields a template needs, redact identifiers (passport and NIE/NIF numbers) where they aren't required, and use a provider with a signed DPA and no training on inputs.</li>
+<li><strong>Logging:</strong> no PII in logs, error reports or analytics events.</li>
+<li><strong>User rights:</strong> build export and delete-my-account from the start, not as an afterthought.</li>
+</ul>
+<h2>7. Defaults proposed for the remaining items (veto any)</h2>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Auth</td>
+<td>Supabase Auth: email magic link + Google. Account required at the paywall, not before</td>
+</tr>
+<tr>
+<td>Forms / validation</td>
+<td>React Hook Form + Zod, with schemas shared from <code>packages/schemas</code></td>
+</tr>
+<tr>
+<td>UI</td>
+<td>Tailwind + shadcn/ui</td>
+</tr>
+<tr>
+<td>i18n</td>
+<td><code>next-intl</code>. English UI first with strings externalised so Spanish can follow. Templates are generated in Spanish with an English preview</td>
+</tr>
+<tr>
+<td>PDF export</td>
+<td><code>@react-pdf/renderer</code>, server-side. DOCX export later if users ask</td>
+</tr>
+<tr>
+<td>DB access</td>
+<td>Supabase client with generated types, migrations via Supabase CLI, no ORM for the MVP</td>
+</tr>
+<tr>
+<td>Email</td>
+<td>Resend (EU region), transactional only</td>
+</tr>
+<tr>
+<td>Analytics</td>
+<td>PostHog (EU) for free-to-paid funnel and checklist drop-off, with cookie consent</td>
+</tr>
+<tr>
+<td>Errors</td>
+<td>Sentry (EU region), with PII scrubbing</td>
+</tr>
+<tr>
+<td>Testing</td>
+<td>Vitest (rules, packages), Playwright (key flows: check, pay, generate)</td>
+</tr>
+<tr>
+<td>CI/CD</td>
+<td>GitHub Actions (lint, type-check, tests). Local environment only for now. Vercel previews and staging/prod come with hosting</td>
+</tr>
+<tr>
+<td>Secrets</td>
+<td>Vercel and Supabase env vars, never in the repo</td>
+</tr>
+</tbody>
+</table>
+<h2>8. Mobile path (later)</h2>
+<ul>
+<li>Expo app in <code>apps/mobile</code> reuses <code>rules</code>, <code>schemas</code>, <code>doc-templates</code> and the API layer. Only UI is rewritten.</li>
+<li><strong>Payments caveat:</strong> Apple and Google require their in-app purchase systems for digital goods sold inside apps (with commission). Options: sell on web only and let the app sign in to unlock, or add in-app purchases later. Decide before the mobile phase, since it affects pricing.</li>
+</ul>
+<h2>9. Local development setup</h2>
+<ul>
+<li>Run Supabase locally with <code>supabase start</code> (Docker): local Postgres, Auth and Storage, with migrations in <code>supabase/migrations</code>.</li>
+<li>Next.js runs with <code>pnpm dev</code> through Turborepo. Stripe is not needed yet (see the payments reminder).</li>
+<li><strong>Real data on a local machine:</strong> Standalone testing will use real people's PII. Keep it out of the repo (<code>.gitignore</code>, no seed files with real data), use full-disk encryption, use synthetic data for automated tests, and don't paste real data into tickets, chats or AI prompts. Get testers' consent in writing, even friends.</li>
+</ul>
+<h2>10. Phase 1 build plan: Standalone first</h2>
+<p>Standalone has to build the foundations itself (data model, PII handling, rules skeleton), so the 6-8 week estimate from the checklist (which assumed Full Pathway's foundations) becomes <strong>about 8-10 weeks part-time</strong>. Full Pathway follows and reuses the foundations.</p>
+<p><strong>Track 1: Standalone, PR / Citizenship (current focus)</strong></p>
+<table>
+<thead>
+<tr>
+<th>Weeks</th>
+<th>Work</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1-2</td>
+<td>Monorepo, local Supabase, schema + RLS, <code>pr-citizenship</code> rules skeleton, design system from Figma. <strong>Book the attorney review slot now</strong></td>
+</tr>
+<tr>
+<td>3-4</td>
+<td>Eligibility intake and result screens, driven by the rules package. Golden test cases from real friend/founder cases</td>
+</tr>
+<tr>
+<td>5-6</td>
+<td>&quot;Have / missing&quot; in-country document checklist (present vs missing only, never valid vs invalid)</td>
+</tr>
+<tr>
+<td>7-8</td>
+<td>Lightweight document generation for the friends/founders cohort, lawyer directory handoff screen</td>
+</tr>
+<tr>
+<td>9-10</td>
+<td>Separate attorney review of PR/Citizenship logic (residency gaps, criminal record, nationality rules), fixes, feedback loop with the beta cohort</td>
+</tr>
+</tbody>
+</table>
+<p>Pricing and paywall are undecided for Standalone, so payments are not in this track.</p>
+<p><strong>Track 2: Full Pathway, NLV / DNV (after Track 1):</strong> about 12 weeks, as in the checklist, reusing the data model and checklist patterns. Includes the Stripe paywall.</p>
+<h2>11. Open points</h2>
+<ol>
+<li><strong>Document uploads:</strong> deferred. When picked up, decide the retention period (30 days proposed, confirm with the lawyer), whether users upload at all or self-confirm each step, and application-level encryption for the most sensitive items.</li>
+<li>Standalone pricing model (undecided in the spec).</li>
+<li>Which AI provider to start with behind the wrapper, and the regions its DPA covers.</li>
+<li>Final app name (see reminders).</li>
+</ol>
+<h2>12. Reminders</h2>
+<ul>
+<li><strong>Mobile payments:</strong> Apple and Google require their in-app purchase systems for digital goods sold inside apps, with commission. Options are web-only purchase with sign-in in the app, or in-app purchases. Decide before the mobile phase, since it affects pricing.</li>
+<li><strong>Company entity and jurisdiction:</strong> decide with a lawyer or accountant. It affects the Stripe account, VAT and the data processing agreements.</li>
+<li><strong>Name:</strong> once the name is final, check trademark and domain availability before branding work goes far.</li>
+<li><strong>Legal gates (from the checklist):</strong> the Standalone review is its own scoped pass, with a higher bar than Full Pathway. Co-founder agreements go in writing before shared production code.</li>
+</ul>
+
+</body></html>

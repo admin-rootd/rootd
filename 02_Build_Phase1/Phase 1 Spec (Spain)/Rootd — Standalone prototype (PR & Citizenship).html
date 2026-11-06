@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rootd — Standalone prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F5F7F6;--card:#fff;--ink:#17212B;--mute:#5B6772;--line:#D9E0DC;--moss:#2F6B4F;--moss-ink:#fff;--warn:#FFF3D6;--warn-ink:#6B4A00;--ok:#E3F1EA;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10171C;--card:#18222A;--ink:#E8EEF0;--mute:#9AA8B1;--line:#2B3842;--moss:#5BB88C;--moss-ink:#0C1A13;--warn:#3A2F10;--warn-ink:#F2D58A;--ok:#183226}}
+:root[data-theme="dark"]{--bg:#10171C;--card:#18222A;--ink:#E8EEF0;--mute:#9AA8B1;--line:#2B3842;--moss:#5BB88C;--moss-ink:#0C1A13;--warn:#3A2F10;--warn-ink:#F2D58A;--ok:#183226}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+main{max-width:560px;margin:0 auto;padding:20px 16px 48px}
+h1,h2{font-family:"Bricolage Grotesque",Georgia,serif;line-height:1.15;margin:0 0 8px}
+h1{font-size:28px}h2{font-size:21px}
+p{margin:0 0 12px}.mute{color:var(--mute);font-size:14px}
+.banner{background:var(--warn);color:var(--warn-ink);padding:10px 12px;border-radius:8px;font-size:14px;margin:12px 0 20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+label{display:block;font-weight:600;margin:14px 0 6px}
+input,select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px}
+textarea{min-height:90px}
+.row{display:flex;gap:8px}.row>*{flex:1}
+button{font:inherit;font-weight:600;border:1px solid var(--moss);background:var(--moss);color:var(--moss-ink);border-radius:8px;padding:11px 14px;cursor:pointer;width:100%}
+button.alt{background:transparent;color:var(--moss)}
+button.sel{background:var(--moss);color:var(--moss-ink)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--moss);outline-offset:2px}
+.bar{height:10px;background:var(--line);border-radius:6px;overflow:hidden;margin:8px 0}
+.bar i{display:block;height:100%;background:var(--moss)}
+.chk{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}
+.chk:first-of-type{border-top:0}
+.chk input{width:22px;height:22px;margin-top:2px;flex:none}
+.tag{font-size:13px;font-weight:600;padding:2px 8px;border-radius:99px;margin-left:auto;flex:none}
+.present{background:var(--ok);color:var(--moss)}.missing{background:var(--warn);color:var(--warn-ink)}
+.flag{border-left:4px solid var(--moss);padding:6px 10px;margin:10px 0;background:var(--bg);font-size:15px}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:no-preference){.bar i{transition:width .3s}}
+</style>
+</head>
+<body>
+<main>
+<h1>Rootd</h1>
+<p class="mute">Spain PR &amp; Citizenship — prototype for early testers</p>
+<div class="banner"><strong>Demo only.</strong> Rules and document lists are placeholders until a licensed lawyer reviews them. This is not legal advice, and results shouldn't be used for a real application.</div>
+
+<section id="s1" class="card">
+<h2>What do you want to check?</h2>
+<p class="mute">Pick the application you're thinking about.</p>
+<div class="row"><button id="bPR" class="alt">Permanent residency</button><button id="bCZ" class="alt">Citizenship</button></div>
+</section>
+
+<section id="s2" class="card" hidden>
+<h2>Your situation</h2>
+<label for="yrs">Years legally resident in Spain</label>
+<input id="yrs" type="number" min="0" max="60" step="0.5" inputmode="decimal" placeholder="e.g. 4.5">
+<label for="nat">Nationality</label>
+<input id="nat" type="text" placeholder="e.g. Philippines">
+<label for="permit">Current permit</label>
+<select id="permit"><option value="">Select…</option><option>Non-Lucrative Visa</option><option>Digital Nomad Visa</option><option>Highly Qualified Professional</option><option>Work permit</option><option>Other</option></select>
+<label for="gap">Any long stretches outside Spain?</label>
+<select id="gap"><option value="">Select…</option><option value="no">No</option><option value="yes">Yes</option><option value="unsure">Not sure</option></select>
+<label for="rec">Any criminal record, in Spain or elsewhere?</label>
+<select id="rec"><option value="">Select…</option><option value="no">No</option><option value="yes">Yes</option><option value="unsure">Not sure</option></select>
+<p></p>
+<button id="go">See my result</button>
+</section>
+
+<section id="s3" hidden>
+<div class="card">
+<h2>Time in Spain</h2>
+<p id="timeTxt"></p>
+<div class="bar"><i id="barFill" style="width:0"></i></div>
+<p class="mute" id="timeNote"></p>
+<div id="flags"></div>
+</div>
+<div class="card">
+<h2>Document checklist</h2>
+<p class="mute">Tick what you already have. Rootd only shows present or missing — it doesn't judge whether a document is enough.</p>
+<div id="docs"></div>
+<p id="sum" style="margin-top:12px;font-weight:600"></p>
+</div>
+<div class="card">
+<h2>Your feedback</h2>
+<label for="f1">Was anything confusing or missing?</label>
+<textarea id="f1"></textarea>
+<label for="f2">Would you use this for your real application? Why or why not?</label>
+<textarea id="f2"></textarea>
+<label for="f3">What would you expect to pay for, if anything?</label>
+<textarea id="f3"></textarea>
+<p></p>
+<button id="copy">Copy my feedback</button>
+<p class="mute" id="copyMsg"></p>
+<p></p>
+<button class="alt" id="again">Start over</button>
+</div>
+</section>
+</main>
+<script>
+var type="";
+var DOCS={PR:["Passport (current)","Current residence card","Proof of continuous residence in Spain","Proof of income or financial means","Application form (official link)","Fee payment receipt"],
+CZ:["Passport (current)","Current residence card","Proof of continuous residence in Spain","Criminal record certificate from home country, apostilled","Sworn translations of foreign documents","Application form (official link)"]};
+var NEED={PR:5,CZ:10};
+function $(i){return document.getElementById(i)}
+function pick(t){type=t;$("bPR").className=t=="PR"?"sel":"alt";$("bCZ").className=t=="CZ"?"sel":"alt";$("s2").hidden=false;$("s2").scrollIntoView({behavior:"smooth"})}
+$("bPR").onclick=function(){pick("PR")};$("bCZ").onclick=function(){pick("CZ")};
+$("go").onclick=function(){
+ var y=parseFloat($("yrs").value);
+ if(isNaN(y)||y<0){$("yrs").focus();$("yrs").placeholder="Enter a number of years";return}
+ var n=NEED[type],pct=Math.min(100,Math.round(y/n*100)),name=type=="PR"?"permanent residency":"citizenship";
+ $("timeTxt").textContent="You've entered "+y+" of the "+n+" years in the general timeline for "+name+".";
+ $("barFill").style.width=pct+"%";
+ $("timeNote").textContent=y>=n?"You've reached the general timeline. Other conditions may still apply.":"About "+(n-y)+" years to go on the general timeline.";
+ var f=[];
+ if($("gap").value!="no")f.push("Time outside Spain can affect how residence is counted. A lawyer should look at your dates.");
+ if($("rec").value!="no")f.push("Criminal record questions need a lawyer's judgment, so Rootd doesn't assess them.");
+ if(type=="CZ")f.push("Citizenship timelines can be shorter or longer depending on nationality"+($("nat").value?" ("+$("nat").value+")":"")+". Check this with a lawyer.");
+ $("flags").innerHTML=f.map(function(t){return '<div class="flag"></div>'}).join("");
+ var els=$("flags").children;for(var i=0;i<f.length;i++)els[i].textContent=f[i];
+ var d=$("docs");d.innerHTML="";
+ DOCS[type].forEach(function(t,i){var r=document.createElement("label");r.className="chk";r.style.fontWeight="400";r.style.margin="0";
+  var c=document.createElement("input");c.type="checkbox";c.onchange=upd;var s=document.createElement("span");s.textContent=t;var g=document.createElement("span");g.className="tag missing";g.textContent="Missing";
+  r.appendChild(c);r.appendChild(s);r.appendChild(g);d.appendChild(r)});
+ upd();$("s3").hidden=false;$("s3").scrollIntoView({behavior:"smooth"})
+};
+function upd(){var rows=$("docs").children,p=0;
+ for(var i=0;i<rows.length;i++){var on=rows[i].firstChild.checked;if(on)p++;var g=rows[i].lastChild;g.textContent=on?"Present":"Missing";g.className="tag "+(on?"present":"missing")}
+ $("sum").textContent=p+" present, "+(rows.length-p)+" missing"}
+$("copy").onclick=function(){
+ var t="Rootd prototype feedback ("+(type=="PR"?"PR":"Citizenship")+")\n1) Confusing/missing: "+$("f1").value+"\n2) Would use for real: "+$("f2").value+"\n3) Would pay for: "+$("f3").value;
+ var m=$("copyMsg");
+ try{navigator.clipboard.writeText(t).then(function(){m.textContent="Copied. Paste it into a message to Ron."},function(){m.textContent="Couldn't copy. Please screenshot your answers instead."})}
+ catch(e){m.textContent="Couldn't copy. Please screenshot your answers instead."}};
+$("again").onclick=function(){location.reload()};
+</script>
+</body>
+</html>
